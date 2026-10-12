@@ -1,0 +1,407 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Table Topics Wheel</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Karla:wght@500;700;800&family=Shrikhand&display=swap">
+<style>
+/* Layout: a game-show stage. One centred column; the wheel sits in a ring of marquee bulbs, then a board of patterned playing cards, then a ticket-stub reveal. Single deliberate dark theatre look. */
+:root {
+  color-scheme: dark;
+  --bg: #12353a;
+  --bg-lift: #1d5057;
+  --ink: #0b1f22;
+  --paper: #f7eedb;
+  --paper-fg: #231c14;
+  --muted: #9cc3c4;
+  --line: rgba(247, 238, 219, .28);
+  --gold: #f0b94a;
+  --gold-fg: #231c14;
+  --c0: #3f7cac;
+  --c1: #d9573b;
+  --c2: #5a9a5b;
+  --c3: #8e5ea2;
+  --c4: #e9b44c;
+  --c5: #e98aa5;
+  --display: "Shrikhand", "Georgia", serif;
+  --serif: "DM Serif Display", "Georgia", serif;
+  --body: "Karla", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse at 50% 18%, var(--bg-lift) 0%, transparent 62%),
+    radial-gradient(rgba(247, 238, 219, .06) 1.2px, transparent 1.6px);
+  background-size: 100% 100%, 22px 22px;
+  color: var(--paper);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.45;
+  padding-inline: 16px;
+  padding-block: 22px 40px;
+  min-height: 100%;
+}
+.app { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+header { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.brand { display: flex; flex-direction: column; gap: 2px; }
+.eyebrow { font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); font-weight: 800; }
+h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 7vw, 2.4rem); line-height: 1.05; margin: 0; color: var(--gold); text-shadow: 3px 3px 0 var(--ink); }
+.left { font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; font-weight: 700; }
+
+button { font: inherit; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; font-size: .85rem; cursor: pointer; border: 0; border-radius: 999px; padding: 13px 24px; background: var(--gold); color: var(--gold-fg); box-shadow: 0 4px 0 var(--ink); transition: transform .08s, box-shadow .08s; }
+button:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+button.ghost { background: transparent; color: var(--paper); border: 1.5px solid var(--line); box-shadow: none; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+button:focus-visible { outline: 3px solid var(--paper); outline-offset: 3px; }
+
+/* wheel stage */
+.stage1 { display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; }
+.wheel-wrap { position: relative; width: min(100%, 470px); margin: 0 auto; aspect-ratio: 1; }
+canvas { width: 100%; height: 100%; display: block; }
+.pointer { position: absolute; left: 50%; top: -2px; width: 0; height: 0; transform: translateX(-50%); border-left: 17px solid transparent; border-right: 17px solid transparent; border-top: 34px solid var(--paper); filter: drop-shadow(0 3px 0 var(--ink)); z-index: 2; }
+.hub { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 23%; aspect-ratio: 1; padding: 0; border-radius: 50%; font-family: var(--display); font-weight: 400; letter-spacing: .02em; text-transform: none; font-size: clamp(.95rem, 4.2vw, 1.35rem); border: 5px solid var(--ink); z-index: 2; box-shadow: 0 0 0 4px var(--gold), 0 6px 14px rgba(0, 0, 0, .45); }
+.hub:active:not(:disabled) { transform: translate(-50%, -48%); box-shadow: 0 0 0 4px var(--gold), 0 2px 6px rgba(0, 0, 0, .45); }
+.result { min-height: 2.4em; font-family: var(--display); font-size: clamp(1.4rem, 6vw, 1.9rem); color: var(--paper); text-wrap: balance; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.chip { display: inline-flex; align-items: center; gap: 8px; font-size: .78rem; font-weight: 700; padding: 5px 12px; border: 1.5px solid var(--line); border-radius: 999px; font-variant-numeric: tabular-nums; }
+.chip i { width: 10px; height: 10px; border-radius: 50%; display: block; }
+.chip.empty { opacity: .45; text-decoration: line-through; }
+
+/* board stage */
+.board-head { display: flex; flex-direction: column; gap: 4px; }
+.board-head h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(2rem, 9vw, 2.8rem); line-height: 1.05; color: var(--cat); text-shadow: 3px 3px 0 var(--ink); text-wrap: balance; }
+.grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(8px, 2.4vw, 14px); max-width: 520px; margin-inline: auto; }
+.card { aspect-ratio: 3 / 4; border-radius: 10px; background-color: var(--cat); background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, .18) 0 5px, transparent 5px 12px); display: grid; place-items: center; border: 3px solid var(--paper); box-shadow: 0 5px 0 var(--ink); transition: transform .12s, box-shadow .12s, opacity .4s; position: relative; }
+.card span { width: 2.3rem; aspect-ratio: 1; border-radius: 50%; background: var(--paper); color: var(--paper-fg); display: grid; place-items: center; font-family: var(--serif); font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+.card.hot { transform: translateY(-8px) rotate(-3deg); box-shadow: 0 0 0 4px var(--gold), 0 0 26px 4px var(--gold); z-index: 1; }
+.card.win { animation: pop .55s; }
+.card.gone { opacity: 0; transform: scale(.6) rotate(8deg); }
+@keyframes pop { 50% { transform: translateY(-14px) scale(1.2) rotate(4deg); } }
+
+.reveal { position: relative; background: var(--paper); color: var(--paper-fg); padding: 26px 26px 24px; display: flex; flex-direction: column; gap: 14px; border-radius: 8px; animation: rise .4s ease-out; box-shadow: 0 6px 0 var(--ink);
+  -webkit-mask: radial-gradient(circle 12px at 0 50%, transparent 97%, #000) left / 51% 100% no-repeat, radial-gradient(circle 12px at 100% 50%, transparent 97%, #000) right / 51% 100% no-repeat;
+          mask: radial-gradient(circle 12px at 0 50%, transparent 97%, #000) left / 51% 100% no-repeat, radial-gradient(circle 12px at 100% 50%, transparent 97%, #000) right / 51% 100% no-repeat; }
+.reveal .tag { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; font-weight: 800; color: var(--cat-ink); padding-bottom: 12px; border-bottom: 2px dashed rgba(35, 28, 20, .28); }
+.reveal .q { font-family: var(--serif); font-size: clamp(1.4rem, 5.6vw, 2rem); line-height: 1.22; margin: 0; text-wrap: balance; }
+@keyframes rise { from { transform: translateY(16px) rotate(-1deg); opacity: 0; } }
+.overlay { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 20px 16px; background: rgba(6, 20, 23, .82); animation: fade .25s ease-out; overflow-y: auto; }
+.overlay[hidden] { display: none; }
+.overlay .reveal { width: min(100%, 560px); padding: 30px 30px 26px; gap: 18px; animation: zoom .5s cubic-bezier(.2, 1.25, .4, 1); }
+.overlay .reveal .q { font-size: clamp(1.6rem, 6.4vw, 2.3rem); }
+.overlay .reveal .actions { padding-top: 6px; }
+.reveal button.ghost { color: var(--paper-fg); border-color: rgba(35, 28, 20, .4); }
+.reveal button:focus-visible { outline-color: var(--paper-fg); }
+@keyframes fade { from { opacity: 0; } }
+@keyframes zoom { from { transform: scale(.55) rotate(-4deg); opacity: 0; } }
+.empty-note { padding: 20px; border: 2px dashed var(--line); border-radius: 12px; color: var(--muted); font-weight: 500; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; }
+footer { display: flex; justify-content: center; }
+footer button { font-size: .72rem; padding: 8px 16px; }
+.gap { height: 16px; }
+@media (prefers-reduced-motion: reduce) { .card, .reveal { animation: none; transition: none; } }
+</style>
+
+<div class="app">
+  <header>
+    <div class="brand">
+      <span class="eyebrow">Tonight's draw</span>
+      <h1>Table Topics</h1>
+    </div>
+    <span class="left" id="totalLeft"></span>
+  </header>
+
+  <section class="stage1" id="stage1">
+    <div class="wheel-wrap">
+      <div class="pointer"></div>
+      <canvas id="wheel"></canvas>
+      <button class="hub" id="hub" aria-label="Spin the wheel">Spin</button>
+    </div>
+    <div class="result" id="result" aria-live="polite"></div>
+    <div class="chips" id="chips"></div>
+  </section>
+
+  <section id="stage2" hidden>
+    <div class="board-head">
+      <span class="eyebrow">Pick a card</span>
+      <h2 id="catName"></h2>
+      <span class="left" id="catLeft"></span>
+    </div>
+    <div class="gap"></div>
+    <div class="grid" id="grid" aria-label="Topic cards"></div>
+    <div class="gap"></div>
+    <div id="revealSlot"></div>
+    <div class="gap"></div>
+    <div class="actions">
+      <button id="drawBtn">Draw a topic</button>
+      <button class="ghost" id="backBtn">Spin again</button>
+    </div>
+  </section>
+
+  <footer><button class="ghost" id="resetBtn">Put all topics back</button></footer>
+</div>
+<div class="overlay" id="overlay" hidden></div>
+
+<script>
+(function () {
+  var CATS = [
+    { name: "School", color: "--c0", ink: "#fff", qs: [
+      "What was your favourite subject in school, and why?",
+      "If you could change one school rule, what would it be?",
+      "Should homework be abolished?",
+      "Who was your most memorable teacher?",
+      "What is one life skill every school should teach?",
+      "Are marks a true reflection of a student's intelligence?",
+      "If you could relive one day of your school life, which day would you choose?",
+      "What is the most important lesson you learned outside the classroom?" ] },
+    { name: "Food", color: "--c1", ink: "#fff", qs: [
+      "If you could eat only one dish for the rest of your life, what would it be?",
+      "What is your ultimate comfort food?",
+      "If you opened a restaurant, what would you name it and serve?",
+      "Does pineapple belong on pizza?",
+      "What food reminds you of your childhood?",
+      "If you could introduce one food from your culture to the entire world, what would it be?",
+      "Would you rather give up sweet food or spicy food forever?",
+      "Is homemade food always better than restaurant food?" ] },
+    { name: "Nature", color: "--c2", ink: "#fff", qs: [
+      "Would you rather live by the sea or in the mountains?",
+      "If you could spend a day with any animal, which would you choose?",
+      "What is your favourite season, and why?",
+      "If trees could talk, what do you think they would say about humans?",
+      "What can we do to protect the environment in our everyday lives?",
+      "If you could visit any natural wonder in the world, where would you go?",
+      "How does spending time in nature affect your mood?",
+      "If you could bring back one extinct animal, which would it be?" ] },
+    { name: "Random", color: "--c3", ink: "#fff", qs: [
+      "If you were a celebrity for a day, what would you do?",
+      "If you could have any superpower, what would it be?",
+      "If your life were a movie, what would its title be?",
+      "If you could switch lives with someone for 24 hours, who would it be?",
+      "What would you do if you woke up invisible tomorrow?",
+      "If you could eliminate one everyday inconvenience, what would it be?",
+      "If you could invent a new holiday, what would people celebrate?",
+      "If you could have dinner with three people, living or dead, who would you invite?" ] },
+    { name: "Dreams", color: "--c4", ink: "#231c14", qs: [
+      "What is one dream you hope to achieve in your lifetime?",
+      "If money were no object, what would you do with your life?",
+      "Where do you see yourself in five years?",
+      "If you knew you couldn't fail, what would you attempt?",
+      "What is one thing you want to do before turning 30?",
+      "Would you rather have a successful career or a peaceful life?",
+      "If you could live anywhere in the world, where would you choose?",
+      "What is one dream you had as a child that you still remember?" ] },
+    { name: "Entertainment", color: "--c5", ink: "#231c14", qs: [
+      "Which movie could you watch over and over again?",
+      "If you could star in any movie, which one would you choose?",
+      "What song best describes your life right now?",
+      "If you could meet any fictional character, who would it be?",
+      "Which celebrity would you want to spend a day with, and why?",
+      "Do you prefer watching movies at home or in a theatre?",
+      "If your life had a background soundtrack, what song would play when you entered a room?",
+      "Which is more entertaining: books, movies, or video games?" ] }
+  ];
+
+  var KEY = "table-topics-asked";
+  var asked = {};
+  try { asked = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { asked = {}; }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(asked)); } catch (e) {} }
+
+  var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var $ = function (id) { return document.getElementById(id); };
+  var N = CATS.length, SEG = Math.PI * 2 / N;
+  var rot = 0, busy = false, current = -1, pool = [], phase = 0;
+  var root = getComputedStyle(document.documentElement);
+  function cssv(n) { return root.getPropertyValue(n).trim(); }
+
+  function remaining(ci) {
+    var out = [];
+    CATS[ci].qs.forEach(function (q, i) { if (!asked[ci + ":" + i]) out.push({ n: i + 1, i: i, q: q }); });
+    return out;
+  }
+  function totalLeft() { var t = 0; for (var c = 0; c < N; c++) t += remaining(c).length; return t; }
+
+  /* ---------- wheel ---------- */
+  var canvas = $("wheel"), ctx = canvas.getContext("2d");
+  function draw() {
+    var dpr = window.devicePixelRatio || 1;
+    var size = canvas.clientWidth;
+    if (!size) return;
+    if (canvas.width !== Math.round(size * dpr)) { canvas.width = canvas.height = Math.round(size * dpr); }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, size, size);
+    var cx = size / 2, outer = size / 2 - 4, rim = size * 0.065, r = outer - rim;
+    var ink = cssv("--ink"), gold = cssv("--gold"), paper = cssv("--paper");
+
+    // rim
+    ctx.beginPath(); ctx.arc(cx, cx, outer, 0, Math.PI * 2); ctx.fillStyle = ink; ctx.fill();
+    ctx.lineWidth = 3; ctx.strokeStyle = gold; ctx.stroke();
+
+    // bulbs
+    var B = 24;
+    for (var b = 0; b < B; b++) {
+      var ba = (b / B) * Math.PI * 2 - Math.PI / 2;
+      var on = (b + phase) % 2 === 0;
+      var bx = cx + Math.cos(ba) * (outer - rim / 2), by = cx + Math.sin(ba) * (outer - rim / 2);
+      ctx.beginPath(); ctx.arc(bx, by, rim * 0.28, 0, Math.PI * 2);
+      ctx.shadowColor = on ? gold : "transparent"; ctx.shadowBlur = on ? 10 : 0;
+      ctx.fillStyle = on ? "#ffe9a8" : "#5b4a1f"; ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // segments
+    for (var i = 0; i < N; i++) {
+      var a0 = -Math.PI / 2 + rot + i * SEG, a1 = a0 + SEG;
+      var empty = remaining(i).length === 0;
+      ctx.globalAlpha = empty ? 0.32 : 1;
+      ctx.beginPath(); ctx.moveTo(cx, cx); ctx.arc(cx, cx, r, a0, a1); ctx.closePath();
+      ctx.fillStyle = cssv(CATS[i].color); ctx.fill();
+      ctx.lineWidth = 3; ctx.strokeStyle = ink; ctx.stroke();
+
+      // label, shrunk until it fits between the hub and the rim
+      ctx.save();
+      ctx.translate(cx, cx); ctx.rotate(a0 + SEG / 2);
+      ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.fillStyle = "#000";
+      var maxW = r - size * 0.2 - size * 0.04, px = Math.round(size * 0.056);
+      do { ctx.font = "800 " + px + "px Karla, system-ui, sans-serif"; px -= 1; }
+      while (ctx.measureText(CATS[i].name).width > maxW && px > 9);
+      ctx.fillText(CATS[i].name, r - size * 0.04, 1);
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function spin() {
+    if (busy) return;
+    var open = [];
+    for (var c = 0; c < N; c++) if (remaining(c).length) open.push(c);
+    if (!open.length) { $("result").textContent = "Every topic has been asked."; return; }
+    busy = true; $("hub").disabled = true; $("result").textContent = "";
+    var k = open[Math.floor(Math.random() * open.length)];
+    var jitter = (Math.random() - 0.5) * SEG * 0.7;
+    var TAU = Math.PI * 2;
+    var targetMod = ((-(k + 0.5) * SEG - jitter) % TAU + TAU) % TAU;
+    var curMod = ((rot % TAU) + TAU) % TAU;
+    var delta = ((targetMod - curMod) % TAU + TAU) % TAU + TAU * (reduce ? 1 : 5);
+    var start = rot, dur = reduce ? 600 : 4600, t0 = performance.now();
+    function frame(t) {
+      var p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 4);
+      rot = start + delta * e; phase = Math.floor((t - t0) / 110) % 2; draw();
+      if (p < 1) requestAnimationFrame(frame);
+      else {
+        $("result").textContent = CATS[k].name;
+        setTimeout(function () { busy = false; $("hub").disabled = false; openBoard(k); }, reduce ? 200 : 1100);
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  /* bulbs chase while idle */
+  if (!reduce) setInterval(function () { if (!busy && !$("stage1").hidden) { phase = 1 - phase; draw(); } }, 480);
+
+  /* ---------- chips / counts ---------- */
+  function refreshChips() {
+    var h = "";
+    for (var c = 0; c < N; c++) {
+      var n = remaining(c).length;
+      h += '<span class="chip' + (n ? "" : " empty") + '"><i style="background:var(' + CATS[c].color + ')"></i>' + CATS[c].name + " " + n + "/" + CATS[c].qs.length + "</span>";
+    }
+    $("chips").innerHTML = h;
+    $("totalLeft").textContent = totalLeft() + " topics left";
+    draw();
+  }
+
+  /* ---------- board ---------- */
+  function openBoard(ci) {
+    current = ci;
+    $("stage1").hidden = true; $("stage2").hidden = false;
+    $("stage2").style.setProperty("--cat", cssv(CATS[ci].color));
+    $("stage2").style.setProperty("--cat-ink", cssv(CATS[ci].color));
+    $("catName").textContent = CATS[ci].name;
+    $("revealSlot").innerHTML = "";
+    $("drawBtn").textContent = "Draw a topic";
+    renderGrid();
+  }
+  function renderGrid() {
+    pool = remaining(current);
+    var g = $("grid"); g.innerHTML = "";
+    pool.forEach(function (it) {
+      var d = document.createElement("div"); d.className = "card"; d.id = "card-" + it.i;
+      var s = document.createElement("span"); s.textContent = it.n; d.appendChild(s); g.appendChild(d);
+    });
+    $("catLeft").textContent = pool.length ? pool.length + " of " + CATS[current].qs.length + " topics left" : "All topics in this category have been asked";
+    $("drawBtn").disabled = !pool.length;
+    if (!pool.length) $("revealSlot").innerHTML = '<div class="empty-note">This category is finished. Spin again to try another one.</div>';
+  }
+
+  function draw1() {
+    if (busy || !pool.length) return;
+    busy = true; $("drawBtn").disabled = true; $("backBtn").disabled = true; $("revealSlot").innerHTML = "";
+    var cards = pool.map(function (it) { return $("card-" + it.i); });
+    var L = cards.length, w = Math.floor(Math.random() * L);
+    var steps = reduce ? 1 : L * 2 + Math.floor(Math.random() * L) + 6;
+    var pos = ((w - steps) % L + L) % L, s = 0, last = null;
+    function hop() {
+      if (last) last.classList.remove("hot");
+      pos = (pos + 1) % L; s++;
+      var el = cards[pos]; el.classList.add("hot"); last = el;
+      if (s < steps) setTimeout(hop, 55 + Math.pow(s / steps, 3) * 420);
+      else {
+        el.classList.add("win");
+        setTimeout(function () { reveal(pool[w], el); }, reduce ? 0 : 650);
+      }
+    }
+    hop();
+  }
+  function reveal(it, el) {
+    asked[current + ":" + it.i] = 1; save();
+    el.classList.add("gone");
+    var left = remaining(current).length;
+    setTimeout(function () {
+      renderGrid();
+      busy = false; $("backBtn").disabled = false;
+      $("drawBtn").disabled = left === 0;
+      $("drawBtn").textContent = "Draw another topic";
+      refreshChips();
+      showTicket(it, left);
+    }, reduce ? 0 : 380);
+  }
+
+  /* the chosen topic appears as a ticket in the middle of the screen */
+  function showTicket(it, left) {
+    var ink = CATS[current].ink === "#fff" ? cssv(CATS[current].color) : "#231c14";
+    var ov = $("overlay");
+    ov.innerHTML =
+      '<div class="reveal" role="dialog" aria-live="polite" style="--cat-ink:' + ink + '">' +
+      '<div class="tag"><span></span><span>Topic ' + it.n + " of " + CATS[current].qs.length + '</span></div>' +
+      '<p class="q"></p>' +
+      '<div class="actions">' + (left ? '<button id="tNext">Draw another</button>' : "") +
+      '<button class="ghost" id="tSpin">Spin again</button></div></div>';
+    ov.querySelector(".tag span").textContent = CATS[current].name;
+    ov.querySelector(".q").textContent = it.q;
+    ov.hidden = false;
+    var nx = $("tNext");
+    if (nx) nx.addEventListener("click", function () { closeTicket(); draw1(); });
+    $("tSpin").addEventListener("click", function () { closeTicket(); $("backBtn").click(); });
+    (nx || $("tSpin")).focus();
+  }
+  function closeTicket() { $("overlay").hidden = true; $("overlay").innerHTML = ""; }
+  $("overlay").addEventListener("click", function (e) { if (e.target === $("overlay")) closeTicket(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeTicket(); });
+
+  $("hub").addEventListener("click", spin);
+  $("drawBtn").addEventListener("click", draw1);
+  $("backBtn").addEventListener("click", function () {
+    if (busy) return;
+    $("stage2").hidden = true; $("stage1").hidden = false; $("result").textContent = "";
+    refreshChips();
+  });
+  $("resetBtn").addEventListener("click", function () {
+    if (busy) return;
+    asked = {}; save(); $("result").textContent = "";
+    if (!$("stage2").hidden) { $("revealSlot").innerHTML = ""; $("drawBtn").textContent = "Draw a topic"; renderGrid(); }
+    refreshChips();
+  });
+  window.addEventListener("resize", draw);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
+  refreshChips();
+})();
+</script>
+
+</body></html>
